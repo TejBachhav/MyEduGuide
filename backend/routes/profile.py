@@ -1,17 +1,125 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel
 from models.profile import Profile
 from database.db import profile_collection, user_collection
 from security.jwt import get_current_user
 from bson import ObjectId
 import shutil
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from datetime import date
 
 router = APIRouter()
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+
+# -------------------------------------------------------------
+# Simplified JSON-based profile model for new frontend wizard
+# (coexists with the original multipart /create implementation)
+# -------------------------------------------------------------
+class SimpleProfile(BaseModel):
+    # Personal Information
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    dateOfBirth: Optional[str] = None  # ISO date string
+    cityVillage: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+
+    # Academic Information
+    currentClass: Optional[str] = None
+    school: Optional[str] = None
+    board: Optional[str] = None
+    previousYearPercentage: Optional[str] = None
+    currentPerformanceLevel: Optional[str] = None
+    strongSubjects: Optional[List[str]] = None
+
+    # Interests and Goals
+    careerInterests: Optional[str] = None
+    preferredFields: Optional[List[str]] = None
+    studyPreferences: Optional[str] = None
+
+    # Family Context
+    fatherOccupation: Optional[str] = None
+    motherOccupation: Optional[str] = None
+    familyIncome: Optional[str] = None
+    familyEducationBackground: Optional[str] = None
+
+    # Additional Information
+    extracurricularActivities: Optional[str] = None
+    challenges: Optional[str] = None
+    supportNeeded: Optional[str] = None
+
+
+def _legacy_to_simple(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Translate legacy snake_case profile to new camelCase shape if needed."""
+    if not doc:
+        return {}
+    if 'firstName' in doc or 'first_name' not in doc:
+        # Already new style or not legacy
+        return doc
+    mapping = {
+        'first_name': 'firstName',
+        'last_name': 'lastName',
+        'date_of_birth': 'dateOfBirth',
+        'city': 'cityVillage',
+        'school_name': 'school',
+        'career_interests': 'careerInterests',
+        'parents_education_level': 'familyEducationBackground',
+        'parents_occupation': 'fatherOccupation',  # best-effort (legacy stored combined)
+    }
+    translated = {k: v for k, v in doc.items() if k not in mapping.keys()}
+    for old, new in mapping.items():
+        if old in doc:
+            translated[new] = doc[old]
+    # Arrays best effort
+    if 'favorite_subjects' in doc and 'strongSubjects' not in translated:
+        translated['strongSubjects'] = doc.get('favorite_subjects', [])
+    return translated
+
+
+@router.get("/")
+async def get_simple_profile(current_user: dict = Depends(get_current_user)):
+    """Return profile in the simplified JSON format expected by the React wizard.
+
+    If only a legacy profile exists, translate it. 404 if none found.
+    """
+    user = await user_collection.find_one({"email": current_user["email"]})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    profile = await profile_collection.find_one({"user_id": str(user["_id"])})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    if "_id" in profile:
+        profile["_id"] = str(profile["_id"])
+    return _legacy_to_simple(profile)
+
+
+@router.post("/")
+async def upsert_simple_profile(data: SimpleProfile, current_user: dict = Depends(get_current_user)):
+    """Create or update profile using simplified JSON structure.
+
+    Coexists with /create (multipart) so we only touch the fields provided,
+    leaving any legacy fields intact unless overwritten.
+    """
+    user = await user_collection.find_one({"email": current_user["email"]})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_id = str(user["_id"])
+    payload = {k: v for k, v in data.dict().items() if v is not None}
+    payload["schema"] = "simple-v1"  # marker
+    existing = await profile_collection.find_one({"user_id": user_id})
+    if existing:
+        await profile_collection.update_one({"user_id": user_id}, {"$set": payload})
+        return {"message": "Profile updated", "profile": payload}
+    else:
+        doc = {"user_id": user_id, **payload}
+        await profile_collection.insert_one(doc)
+        return {"message": "Profile created", "profile": payload}
 
 @router.post("/create")
 async def create_profile(

@@ -1,0 +1,124 @@
+/* Enhanced UI Components */
+
+/* Metric Tiles */
+.metric-tile {
+  position: relative;
+  background: radial-gradient(circle at 85% 20%, rgba(255,255,255,0.28), rgba(255,255,255,0.06) 60%) , linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 1.1rem;
+  padding: 1.15rem 1.2rem 1.2rem;
+  font-size: 0.68rem;
+  letter-spacing: .08em;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: .35rem;
+  overflow: hidden;
+  min-height: 120px;
+  min-width: 0;
+  line-height:1.15;
+  text-transform: uppercase;
+  font-weight:600;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 4px 18px -8px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  transition: background .35s ease, transform .35s ease, box-shadow .4s ease;
+}
+
+/* subtle accent overlay */
+.metric-tile::before { content:""; position:absolute; inset:0; background:linear-gradient(160deg,rgba(255,255,255,0.25),rgba(255,255,255,0)); mix-blend-mode:overlay; opacity:.55; pointer-events:none; transition:opacity .4s ease; }
+.metric-tile:hover::before { opacity:.8; }
+
+.metric-tile:hover { transform:translateY(-4px); box-shadow:0 10px 28px -10px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,0.07) inset; }
+
+.metric-tile strong { margin-top:.15rem; font-size:1.9rem; font-weight:700; line-height:1; background:linear-gradient(90deg,#34d399,#38bdf8,#6366f1); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:0; }
+
+/* Mini Cards */
+.mini-card {
+  position: relative;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.2);
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mini-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 85% 15%, rgba(255,255,255,0.3), transparent 60%);
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.mini-card:hover::before {
+  opacity: 1;
+}
+
+/* Dashboard Header */
+.dash-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.8) 80%, rgba(255,255,255,0));
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+/* Header nav buttons container */
+.dash-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .dash-header-nav {
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Adjust header inner layout */
+.dash-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.dash-header-inner {
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+/* Profile completion progress bar */
+.progress-bar-glass {
+  height: 0.5rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+  border-radius: 1rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-glass > span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #66a6ff, #89f7fe);
+  border-radius: 1rem;
+  transition: width 0.5s ease-out;
+}

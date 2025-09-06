@@ -1,11 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import '../background.css';
+import '../components.css';
+import '../darkMode.css';
+import '../layout.css';
+import '../dashboardLayout.css';
+import '../miniCard.css';
+import '../enhancedLayout.css';
+import '../styles/header.css';
 
 const Dashboard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showAllSubjects, setShowAllSubjects] = useState(false);
+  const navigatedToProfileRef = useRef(false);
+  const fetchedRef = useRef(false); // guard for React 18 StrictMode double call
   // UI modes (shared with profile page keys for consistency)
   const [solid, setSolid] = useState(() => {
     const saved = localStorage.getItem('profileDisplayMode');
@@ -16,9 +27,13 @@ const Dashboard = () => {
     return saved ? saved === 'true' : false;
   });
   const navigate = useNavigate();
+  const [navOpen, setNavOpen] = useState(false);
+  const navRef = useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
+      if (fetchedRef.current) return; // prevent duplicate fetch in dev strict mode
+      fetchedRef.current = true;
       try {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -26,9 +41,11 @@ const Dashboard = () => {
           return;
         }
 
-        const response = await axios.get('http://localhost:8000/profile', {
-          headers: { Authorization: `Bearer ${token}` }
+        const api = axios.create({ baseURL: 'http://localhost:8000' });
+        api.interceptors.request.use(cfg => {
+          cfg.headers = cfg.headers || {}; cfg.headers.Authorization = `Bearer ${token}`; return cfg;
         });
+        const response = await api.get('/profile/');
         
         setProfile(response.data);
       } catch (error) {
@@ -37,7 +54,10 @@ const Dashboard = () => {
           localStorage.removeItem('token');
           navigate('/login');
         } else if (error.response?.status === 404) {
-          navigate('/profile');
+          if (!navigatedToProfileRef.current) {
+            navigatedToProfileRef.current = true;
+            navigate('/profile');
+          }
         } else {
           setError('Failed to load profile data.');
         }
@@ -53,6 +73,29 @@ const Dashboard = () => {
   useEffect(() => { localStorage.setItem('profileDisplayMode', solid ? 'solid' : 'glass'); }, [solid]);
   useEffect(() => { localStorage.setItem('profileDarkMode', dark ? 'true' : 'false'); }, [dark]);
 
+  // Close mobile nav on resize / route changes / outside click
+  useEffect(() => {
+    const handleResize = () => { if (window.innerWidth > 820 && navOpen) setNavOpen(false); };
+    const handleKey = (e) => { if (e.key === 'Escape') setNavOpen(false); };
+    const handleClick = (e) => { if (navRef.current && !navRef.current.contains(e.target)) setNavOpen(false); };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('keydown', handleKey);
+    document.addEventListener('mousedown', handleClick);
+    return () => { window.removeEventListener('resize', handleResize); window.removeEventListener('keydown', handleKey); document.removeEventListener('mousedown', handleClick); };
+  }, [navOpen]);
+
+  // Shrink header on scroll
+  useEffect(() => {
+    const el = document.querySelector('.header-nav');
+    if (!el) return;
+    const onScroll = () => {
+      if (window.scrollY > 12) el.classList.add('is-scrolled'); else el.classList.remove('is-scrolled');
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
@@ -60,19 +103,15 @@ const Dashboard = () => {
 
   const getCompletionPercentage = () => {
     if (!profile) return 0;
-    
+    // Match the wizard's actual required set (dateOfBirth is optional there)
     const requiredFields = [
-      'firstName', 'lastName', 'age', 'gender', 'dateOfBirth',
+      'firstName', 'lastName', 'age', 'gender', 'state',
       'currentClass', 'school', 'board',
       'previousYearPercentage', 'currentPerformanceLevel',
       'careerInterests'
     ];
-    
-    const completedFields = requiredFields.filter(field => 
-      profile[field] && profile[field] !== ''
-    ).length;
-    
-    return Math.round((completedFields / requiredFields.length) * 100);
+    const completed = requiredFields.filter(f => profile[f] && profile[f] !== '').length;
+    return Math.round((completed / requiredFields.length) * 100);
   };
 
   if (loading) {
@@ -110,87 +149,199 @@ const Dashboard = () => {
   }
 
   return (
-    <div className={`dashboard-page ${dark ? 'dark' : ''} relative min-h-screen w-full overflow-x-hidden`}>      
-      <div className="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none select-none">
+    <div className={`dashboard-page ${dark ? 'dark' : ''}`}>      
+      <div className="fixed top-0 left-0 w-full h-full -z-0 pointer-events-none select-none">
         <div className="orb-1"></div>
         <div className="orb-2"></div>
         <div className="orb-3"></div>
       </div>
-      <header className="dash-header sticky top-0 z-30 px-4 pt-4">
-        <div className={`auth-card dash-header-inner ${solid ? 'auth-card-solid' : ''}`} style={{padding:'1rem 1.25rem', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-md"><span className="text-white font-bold text-lg">M</span></div>
-            <div>
-              <h1 className="text-lg font-bold">MyEduGuide</h1>
-              <p className="text-[11px] opacity-80">Welcome, {profile?.firstName || 'Student'}!</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            <button onClick={() => setSolid(!solid)} className="auth-button-secondary" style={{padding:'.55rem .8rem', fontSize:'.65rem'}}>{solid ? 'Glass Mode' : 'Solid Mode'}</button>
-            <button onClick={() => setDark(!dark)} className="auth-button-secondary" style={{padding:'.55rem .8rem', fontSize:'.65rem'}}>{dark ? 'Light' : 'Dark'}</button>
-            <button onClick={() => navigate('/profile')} className="btn-glass">Edit Profile</button>
-            <button onClick={handleLogout} className="btn-glass-primary">Logout</button>
+      
+      <header className="header-nav" ref={navRef} role="banner">
+        <div className="brand">
+          <button className="nav-toggle" aria-label={navOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={navOpen} onClick={() => setNavOpen(o => !o)}>
+            <span className="nav-toggle-bar" />
+            <span className="nav-toggle-bar" />
+            <span className="nav-toggle-bar" />
+          </button>
+          <div className="brand-mark" aria-hidden="true">M</div>
+          <div className="brand-text">
+            <h1 className="brand-title">MyEduGuide</h1>
+            <p className="brand-sub">Welcome, {profile?.firstName || 'Student'}!</p>
           </div>
         </div>
+        <nav className={`nav-buttons-wrapper ${navOpen ? 'open' : ''}`} aria-label="Main navigation">
+          <ul className="nav-buttons" role="menubar">
+            <li role="none">
+              <button
+                onClick={() => setSolid(!solid)}
+                className="nav-button nav-button-secondary"
+                aria-pressed={solid}
+              >
+                {solid ? 'Glass Mode' : 'Solid Mode'}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                onClick={() => setDark(!dark)}
+                className="nav-button nav-button-secondary"
+                aria-pressed={dark}
+              >
+                {dark ? 'Light Mode' : 'Dark Mode'}
+              </button>
+            </li>
+            <li role="none">
+              <button
+                onClick={() => navigate('/profile')}
+                className="nav-button nav-button-secondary"
+              >
+                Edit Profile
+              </button>
+            </li>
+            <li role="none">
+              <button
+                onClick={handleLogout}
+                className="nav-button nav-button-primary"
+              >
+                Logout
+              </button>
+            </li>
+          </ul>
+        </nav>
       </header>
-      <main className="max-w-7xl mx-auto px-4 md:px-8 pt-10 pb-16">
-        <section className={`auth-card ${solid ? 'auth-card-solid' : ''} mb-10`}>
+      
+      <main className="dashboard-container main-content">
+        <div className="dashboard-inner">
+        <section className={`auth-card ${solid ? 'auth-card-solid' : ''} dash-section`}>
           <div className="flex flex-wrap gap-6 items-start justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold mb-1">Profile Completion</h2>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold mb-1 text-gradient-primary">Profile Completion</h2>
               <p className="text-indigo-200 text-sm">Complete your profile to get personalized career guidance</p>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               <div className="text-3xl font-bold bg-clip-text text-transparent" style={{backgroundImage:'linear-gradient(90deg,#66a6ff,#764ba2)'}}>{getCompletionPercentage()}%</div>
               <div className="text-xs uppercase tracking-wide opacity-70">Complete</div>
             </div>
           </div>
+          
           <div className="progress-bar-glass mb-6" aria-label="Profile completion progress">
             <span style={{width:`${getCompletionPercentage()}%`}} />
           </div>
+          
           {getCompletionPercentage() < 100 && (
-            <button onClick={() => navigate('/profile')} className="btn-glass-primary">Complete Profile</button>
+            <button onClick={() => navigate('/profile')} className="btn-glass-primary mb-6">Complete Profile</button>
+          )}
+          
+          {profile && (
+            <div className="metrics-row">
+              <div className="metric-tile">
+                <span>Required Fields</span>
+                <strong>{getCompletionPercentage()}%</strong>
+              </div>
+              <div className="metric-tile">
+                <span>Subjects</span>
+                <strong>{profile.strongSubjects?.length || 0}</strong>
+              </div>
+              <div className="metric-tile">
+                <span>Preferred Fields</span>
+                <strong>{profile.preferredFields?.length || 0}</strong>
+              </div>
+              <div className="metric-tile">
+                <span>Phases Done</span>
+                <strong>{Math.min(6, Math.ceil(getCompletionPercentage()/ (100/6)))}</strong>
+              </div>
+            </div>
           )}
         </section>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div className="dashboard-grid">
           <div className={`auth-card mini-card ${solid ? 'auth-card-solid' : ''}`}>
             <h3 className="text-lg font-semibold mb-5 flex items-center gap-2"><span>👤</span> Personal Information</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between gap-4"><span className="opacity-70">Name</span><span className="font-medium text-right">{profile?.firstName} {profile?.lastName || ''}</span></div>
-              <div className="flex justify-between gap-4"><span className="opacity-70">Age</span><span className="font-medium">{profile?.age || '—'}</span></div>
-              <div className="flex justify-between gap-4"><span className="opacity-70">Gender</span><span className="font-medium">{profile?.gender || '—'}</span></div>
-              <div className="flex justify-between gap-4"><span className="opacity-70">Location</span><span className="font-medium text-right truncate max-w-[140px]" title={`${profile?.cityVillage || ''} ${profile?.state || ''}`}>{profile?.state ? `${profile.cityVillage || ''}, ${profile.state}` : '—'}</span></div>
+            <div className="mini-card-content">
+              <div className="mini-card-body">
+                <div className="info-row">
+                  <span className="info-row-label">Name</span>
+                  <span className="info-row-value text-truncate">{profile?.firstName} {profile?.lastName || ''}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-row-label">Age</span>
+                  <span className="info-row-value">{profile?.age || '—'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-row-label">Gender</span>
+                  <span className="info-row-value">{profile?.gender || '—'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-row-label">Location</span>
+                  <span className="info-row-value text-truncate" title={`${profile?.cityVillage || ''} ${profile?.state || ''}`}>
+                    {profile?.state ? `${profile.cityVillage || ''}, ${profile.state}` : '—'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
           <div className={`auth-card mini-card ${solid ? 'auth-card-solid' : ''}`}>
             <h3 className="text-lg font-semibold mb-5 flex items-center gap-2"><span>📚</span> Academic Information</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between gap-4"><span className="opacity-70">Class</span><span className="font-medium">{profile?.currentClass || '—'}</span></div>
-              <div className="flex justify-between gap-4"><span className="opacity-70">School</span><span className="font-medium truncate max-w-[140px]" title={profile?.school}>{profile?.school || '—'}</span></div>
-              <div className="flex justify-between gap-4"><span className="opacity-70">Board</span><span className="font-medium">{profile?.board || '—'}</span></div>
-              <div className="flex justify-between gap-4"><span className="opacity-70">Prev %</span><span className="font-medium">{profile?.previousYearPercentage ? `${profile.previousYearPercentage}%` : '—'}</span></div>
+            <div className="mini-card-content">
+              <div className="mini-card-body">
+                <div className="info-row">
+                  <span className="info-row-label">Class</span>
+                  <span className="info-row-value">{profile?.currentClass || '—'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-row-label">School</span>
+                  <span className="info-row-value text-truncate" title={profile?.school}>{profile?.school || '—'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-row-label">Board</span>
+                  <span className="info-row-value">{profile?.board || '—'}</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-row-label">Prev %</span>
+                  <span className="info-row-value">{profile?.previousYearPercentage ? `${profile.previousYearPercentage}%` : '—'}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div className={`auth-card mini-card ${solid ? 'auth-card-solid' : ''}`}>
             <h3 className="text-lg font-semibold mb-5 flex items-center gap-2"><span>🎯</span> Performance & Interests</h3>
-            <div className="space-y-4 text-sm">
-              <div><span className="opacity-70 block mb-1">Performance Level</span><span className="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium">{profile?.currentPerformanceLevel || 'Not assessed'}</span></div>
-              {profile?.strongSubjects?.length > 0 && (
+            <div className="mini-card-content">
+              <div className="mini-card-body">
                 <div>
-                  <span className="opacity-70 block mb-2">Strong Subjects</span>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.strongSubjects.slice(0,4).map((s,i)=>(<span key={i} className="px-2 py-1 rounded bg-white/10 border border-white/15 text-[11px]">{s}</span>))}
-                    {profile.strongSubjects.length > 4 && <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[11px]">+{profile.strongSubjects.length-4}</span>}
+                  <span className="info-row-label block mb-2">Performance</span>
+                  <span className="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-medium">
+                    {profile?.currentPerformanceLevel || 'Not assessed'}
+                  </span>
+                </div>
+                {profile?.strongSubjects?.length > 0 && (
+                  <div>
+                    <span className="info-row-label block mb-2">Strong Subjects</span>
+                    <div className="subject-tags-container">
+                      {(showAllSubjects ? profile.strongSubjects : profile.strongSubjects.slice(0,6)).map((s,i)=>(
+                        <span key={i} className="subject-tag">{s}</span>
+                      ))}
+                    {profile.strongSubjects.length > 6 && (
+                      <button type="button" onClick={() => setShowAllSubjects(!showAllSubjects)} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[11px] hover:bg-white/10 transition">
+                        {showAllSubjects ? 'Show Less' : `+${profile.strongSubjects.length-6}`}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
             </div>
+          </div>
           </div>
         </div>
         {profile?.careerInterests && (
           <section className={`auth-card ${solid ? 'auth-card-solid' : ''} mt-10`}>
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><span>🌟</span> Career Interests & Aspirations</h3>
             <p className="opacity-90 leading-relaxed text-sm whitespace-pre-line">{profile.careerInterests}</p>
+          </section>
+        )}
+        {(!profile?.careerInterests || getCompletionPercentage() < 100) && (
+          <section className={`auth-card ${solid ? 'auth-card-solid' : ''} mt-10 dash-cta-card`}>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><span>🛠️</span> Complete Your Profile</h3>
+            <p className="text-sm opacity-80 mb-4">Finish missing information to unlock personalized recommendations.</p>
+            <button onClick={() => navigate('/profile')} className="btn-glass-primary">Update Profile Now</button>
           </section>
         )}
         {(profile?.fatherOccupation || profile?.motherOccupation || profile?.familyEducationBackground) && (
@@ -223,6 +374,7 @@ const Dashboard = () => {
         <footer className="text-center mt-16 opacity-70 text-xs tracking-wide">
           MyEduGuide – Personalized career guidance platform
         </footer>
+        </div>
       </main>
     </div>
   );

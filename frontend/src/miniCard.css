@@ -1,0 +1,115 @@
+/* Mini Card Styles */
+.mini-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+  min-height: 280px;
+  padding: 1.5rem;
+}
+
+.mini-card-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mini-card-header span {
+  font-size: 1.25rem;
+}
+
+.mini-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.info-row-label {
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+.info-row-value {
+  flex: 1;
+  text-align: right;
+  word-break: break-word;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.subject-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.subject-tag {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.subject-tag:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Dark mode adjustments */
+.dashboard-page.dark .mini-card {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.12);
+  height: fit-content;
+}
+
+.dashboard-page.dark .info-row-label {
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.dashboard-page.dark .info-row-value {
+  color: rgba(226, 232, 240, 0.9);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .mini-card {
+    min-height: 240px;
+    padding: 1.25rem;
+  }
+  
+  .mini-card-header {
+    margin-bottom: 1.25rem;
+  }
+  
+  .info-row {
+    gap: 0.75rem;
+  }
+  
+  .info-row-label {
+    min-width: 70px;
+  }
+}

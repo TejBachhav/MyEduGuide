@@ -103,7 +103,7 @@ const Profile = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:8000/profile', {
+  const response = await axios.get('http://localhost:8000/profile/', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -258,7 +258,7 @@ const Profile = () => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:8000/profile', formData, {
+  await axios.post('http://localhost:8000/profile/', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -268,7 +268,13 @@ const Profile = () => {
       }, 1500);
     } catch (error) {
       console.error('Profile submission error:', error);
-      setError('Failed to save profile. Please try again.');
+      if (error.response?.status === 401) {
+        setError('Session expired or unauthorized. Please log in again.');
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        setError('Failed to save profile. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -387,8 +393,8 @@ const Profile = () => {
                 {fieldErrors.school && <div className="field-error-text">{fieldErrors.school}</div>}
               </div>
             </div>
-            <div className="info-box-glass mt-10">
-              <div className="flex items-start space-x-3">
+            <div className="info-box-glass info-spacing">
+              <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0"><span className="text-blue-300 text-lg">💡</span></div>
                 <div>
                   <h4 className="font-semibold text-white">Why do we need this?</h4>
@@ -430,9 +436,9 @@ const Profile = () => {
                 {fieldErrors.currentPerformanceLevel && <div className="field-error-text">{fieldErrors.currentPerformanceLevel}</div>}
               </div>
             </div>
-            <div>
+            <div className="mt-6">
               <label className="form-label">Strong Subjects (Select all that apply)</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+              <div className="subjects-grid">
                 {['Mathematics', 'Science', 'English', 'Social Studies', 'Computer Science', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'Economics', 'Political Science', 'Languages', 'Arts', 'Physical Education'].map(subject => (
                   <label key={subject} className="checkbox-label-glass">
                     <input type="checkbox" name="strongSubjects" value={subject} checked={formData.strongSubjects.includes(subject)} onChange={handleInputChange} className="form-checkbox-glass" />
@@ -441,7 +447,7 @@ const Profile = () => {
                 ))}
               </div>
             </div>
-            <div className="info-box-glass">
+            <div className="info-box-glass mt-8">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0"><span className="text-green-300 text-lg">🌟</span></div>
                 <div>

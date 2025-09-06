@@ -37,7 +37,7 @@ code {
 .flex { display: flex; }
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
+.justify-between { justify-content: normal; }
 .h-screen { height: 100vh; }
 .min-h-screen { min-height: 100vh; }
 
@@ -201,7 +201,7 @@ code {
 .gap-2 { gap: 0.5rem; }
 .gap-3 { gap: 0.75rem; }
 .gap-4 { gap: 1rem; }
-.gap-6 { gap: 1.5rem; }
+.gap-6 { justify-content: space-between;}
 
 /* Position */
 .relative { position: relative; }
@@ -366,7 +366,7 @@ code {
 }
 
 @media (min-width: 1024px) {
-    .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr));gap: inherit; }
     .lg\:text-xl { font-size: 1.25rem; line-height: 1.75rem; }
     .lg\:p-10 { padding: 2.5rem; }
 }
@@ -1195,6 +1195,17 @@ code {
 .profile-nav .next-button { min-width:160px; padding:.85rem 1.6rem; font-weight:600; letter-spacing:.03em; }
 .profile-nav .next-button:disabled { opacity:.6; cursor:not-allowed; }
 
+/* Large spacing helper for info boxes under single full-width field */
+.info-spacing { margin-top:3.25rem; }
+.profile-page .info-spacing { margin-top:3.25rem; }
+.profile-page.dark .info-spacing { margin-top:3.25rem; }
+
+/* Subjects grid refinement */
+.subjects-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:.85rem; margin-top:.85rem; }
+@media (min-width:900px){ .subjects-grid { grid-template-columns:repeat(3,1fr); } }
+.subjects-grid .checkbox-label-glass { font-size:.75rem; padding:.75rem .9rem; border-radius:2rem; display:flex; align-items:center; }
+.subjects-grid .checkbox-label-glass input { margin-right:.55rem; }
+
 /* Slightly elevate card within profile */
 .profile-page .auth-card-solid { background: linear-gradient(160deg,#ffffff 0%, #f7faff 55%, #eef5ff 100%); }
 .profile-page .auth-card { position:relative; overflow:visible; }
@@ -1483,4 +1494,56 @@ select.form-input-glass option { color:#0f172a; }
 
 /* Utility adjustments when inside solid card */
 .auth-card-solid .checkbox-label-glass .form-checkbox-glass { border-color: #475569; }
+
+/* -------------------------------------------------- */
+/* Dashboard Enhancements                             */
+/* -------------------------------------------------- */
+.dashboard-page { overflow-x:hidden; }
+.dash-header-inner { position:relative; }
+.dash-header-inner::after { content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.35),rgba(255,255,255,0)); pointer-events:none; }
+.dashboard-page.dark .dash-header-inner::after { background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.18),rgba(255,255,255,0)); }
+
+/* Mini cards subtle accent ring */
+.mini-card { position:relative; overflow:hidden; }
+.mini-card::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.35),transparent 60%); pointer-events:none; opacity:.55; }
+.dashboard-page.dark .mini-card::before { background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.18),transparent 60%); }
+
+/* Feature cards hover lift */
+.feature-card { position:relative; transition:transform .4s, box-shadow .45s; }
+.feature-card:hover { transform:translateY(-6px); box-shadow:0 18px 40px -15px rgba(0,0,0,.35),0 8px 18px -6px rgba(0,0,0,.25); }
+
+/* Section divider */
+.dash-section + .dash-section { margin-top:3.5rem; }
+
+/* Subtle gradient text utility */
+.text-gradient-primary { background:linear-gradient(90deg,#66a6ff,#764ba2 40%,#89f7fe); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.dashboard-page.dark .text-gradient-primary { background:linear-gradient(90deg,#4ade80,#38bdf8,#6366f1); -webkit-background-clip:text; background-clip:text; }
+
+/* Metrics row */
+.metrics-row { 
+  display: grid; 
+  gap: 1.2rem; 
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+  margin-top: 1.75rem;
+  width: 100%;
+  overflow: hidden;
+}
+.metric-tile { position:relative; padding:1rem 1rem 1.1rem; border-radius:1rem; background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.08)); border:1px solid rgba(255,255,255,.25); font-size:.7rem; letter-spacing:.07em; text-transform:uppercase; font-weight:600; color:#0f172a; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+.metric-tile strong { display:block; font-size:1.6rem; line-height:1; margin-top:.2rem; font-weight:700; background:linear-gradient(90deg,#66a6ff,#764ba2); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.dashboard-page.dark .metric-tile { background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.05)); border-color:rgba(255,255,255,.18); color:#e2e8f0; }
+.dashboard-page.dark .metric-tile strong { background:linear-gradient(90deg,#4ade80,#38bdf8,#6366f1); }
+
+/* Subject tag hover */
+.subject-tag { transition:background .3s, border-color .3s; }
+.subject-tag:hover { background:rgba(255,255,255,.2); border-color:rgba(255,255,255,.35); }
+.dashboard-page.dark .subject-tag:hover { background:rgba(255,255,255,.15); }
+
+/* CTA card accent */
+.dash-cta-card { position:relative; overflow:hidden; }
+.dash-cta-card::after { content:""; position:absolute; inset:0; background:linear-gradient(120deg,rgba(102,166,255,.35),rgba(118,75,162,.0) 60%); mix-blend-mode:overlay; pointer-events:none; }
+.dashboard-page.dark .dash-cta-card::after { background:linear-gradient(120deg,rgba(56,189,248,.35),rgba(99,102,241,.0) 60%); }
+
+/* Footer subtle line */
+footer::before { content:""; display:block; width:100%; height:1px; margin:0 0 1.5rem; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.3),rgba(255,255,255,0)); opacity:.6; }
+
 

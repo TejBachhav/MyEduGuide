@@ -7,6 +7,7 @@ class User(BaseModel):
     name: str
     email: EmailStr
     password: str
+    role: Optional[str] = "user"  # 'user' | 'admin'
 
     class Config:
         populate_by_name = True
@@ -14,3 +15,9 @@ class User(BaseModel):
 
 class UserInDB(User):
     password_hash: str
+
+class UserCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: Optional[str] = "user"

@@ -44,4 +44,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     user = await user_collection.find_one({"email": email})
     if user is None:
         raise credentials_exception
-    return {"email": user["email"]}
+    return {"email": user["email"], "role": user.get("role", "user")}

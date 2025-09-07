@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from models.user import User
+from models.user import UserCreate, User
 from database.db import user_collection
 from security.jwt import create_access_token, get_password_hash, verify_password
 from datetime import timedelta
@@ -10,7 +10,7 @@ router = APIRouter()
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 @router.post("/signup")
-async def signup(user: User):
+async def signup(user: UserCreate):
     db_user = await user_collection.find_one({"email": user.email})
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -24,7 +24,7 @@ async def signup(user: User):
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -41,6 +41,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": form_data.username}, expires_delta=access_token_expires
+        data={"sub": form_data.username, "role": user.get("role", "user")}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}

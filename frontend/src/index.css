@@ -1260,14 +1260,14 @@ code {
 .profile-page.dark .progress-bar-glass { background: linear-gradient(135deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04)); }
 
 /* Dark mode card adjustments */
-.profile-page.dark .auth-card { background: rgba(30,41,59,0.55); border-color: rgba(255,255,255,0.12); }
+.profile-page.dark .auth-card { background: rgba(30,41,59,0.55); border-color: rgba(255,255,255,0.12); width: auto; }
 .profile-page.dark .auth-card::before { background: radial-gradient(circle at 75% 15%, rgba(255,255,255,0.20), transparent 60%); }
 .profile-page.dark .auth-card-solid { background: #1e293b; border:1px solid #334155; box-shadow: 0 12px 28px -8px rgba(0,0,0,0.55), 0 4px 12px rgba(0,0,0,0.4); }
 .profile-page.dark .auth-card-solid::before { background: radial-gradient(circle at 70% 18%, rgba(255,255,255,0.08), transparent 70%); }
 
 .profile-page.dark .form-label { color: rgba(226,232,240,0.75); }
 .profile-page.dark .auth-card-solid .form-label { color: rgba(226,232,240,0.75); }
-.profile-page.dark .form-input-glass { border-color: rgba(255,255,255,0.2); background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06)); color:#f1f5f9; }
+.profile-page.dark .form-input-glass { border-color: rgba(255,255,255,0.2); background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06)); color:#f1f5f9; width: -webkit-fill-available;}
 .profile-page.dark .auth-card-solid .form-input-glass { background:#334155; border-color:#475569; color:#f1f5f9; }
 .profile-page.dark .auth-card-solid .form-input-glass:focus { border-color:#66a6ff; box-shadow:0 0 0 3px rgba(102,166,255,0.35); }
 
@@ -1546,5 +1546,55 @@ select.form-input-glass option { color:#0f172a; }
 
 /* Footer subtle line */
 footer::before { content:""; display:block; width:100%; height:1px; margin:0 0 1.5rem; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.3),rgba(255,255,255,0)); opacity:.6; }
+
+.dark-only-mode { background:linear-gradient(135deg,#0f172a,#1e1b4b); color:#e2e8f0; }
+.dark-only-mode .btn-glass-primary { background:linear-gradient(90deg,#2563eb,#7c3aed); }
+
+/* Admin Aptitude Custom Palette */
+.aptitude-admin-page {
+  --apt-bg-stop1:#1d4763; /* deep steel blue */
+  --apt-bg-stop2:#142637; /* dark desaturated navy */
+  --apt-bg-stop3:#101b29; /* deeper base */
+  --apt-accent:#3ba4f6;
+  --apt-accent-glow:#5cc0ff;
+  --apt-surface:rgba(18,31,46,0.72);
+  --apt-border:rgba(255,255,255,0.08);
+  --apt-border-strong:rgba(255,255,255,0.14);
+  --apt-text:#e6f2fa;
+  --apt-muted:#90a6bb;
+  background:linear-gradient(115deg,var(--apt-bg-stop1) 0%,var(--apt-bg-stop2) 45%,var(--apt-bg-stop3) 100%) fixed;
+  color:var(--apt-text);
+}
+.aptitude-admin-page h1, .aptitude-admin-page h2, .aptitude-admin-page h3 { color:var(--apt-text); }
+.aptitude-admin-page .auth-card.aptitude-admin-card { 
+  background:linear-gradient(145deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));
+  border:1px solid var(--apt-border);
+  box-shadow:0 4px 18px -4px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  backdrop-filter:blur(14px);
+  color:var(--apt-text);
+}
+.aptitude-admin-page .auth-card.aptitude-admin-card input,
+.aptitude-admin-page .auth-card.aptitude-admin-card select,
+.aptitude-admin-page .auth-card.aptitude-admin-card textarea {
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--apt-border);
+  color:var(--apt-text);
+}
+.aptitude-admin-page .auth-card.aptitude-admin-card input::placeholder,
+.aptitude-admin-page .auth-card.aptitude-admin-card textarea::placeholder { color:var(--apt-muted); }
+.aptitude-admin-page .btn-glass-primary { 
+  background:linear-gradient(90deg,var(--apt-accent),var(--apt-accent-glow));
+  color:#0b1722; font-weight:600; border:1px solid var(--apt-border-strong);
+  box-shadow:0 0 0 1px rgba(255,255,255,0.15) inset,0 4px 12px -2px rgba(0,0,0,0.5);
+}
+.aptitude-admin-page .btn-glass-secondary { 
+  background:rgba(255,255,255,0.08);
+  border:1px solid var(--apt-border);
+  color:var(--apt-text);
+}
+.aptitude-admin-page .btn-glass-primary:hover { filter:brightness(1.07); }
+.aptitude-admin-page .btn-glass-secondary:hover { background:rgba(255,255,255,0.14); }
+.aptitude-admin-page .badge-type { background:rgba(59,164,246,0.18); color:var(--apt-accent); border:1px solid rgba(59,164,246,0.4); }
+.aptitude-admin-page .question-item { background:rgba(255,255,255,0.05); border:1px solid var(--apt-border); }
 
 

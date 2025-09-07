@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAllSubjects, setShowAllSubjects] = useState(false);
+  const [aptitudeResult, setAptitudeResult] = useState(null);
   const navigatedToProfileRef = useRef(false);
   const fetchedRef = useRef(false); // guard for React 18 StrictMode double call
   // UI modes (shared with profile page keys for consistency)
@@ -48,6 +49,8 @@ const Dashboard = () => {
         const response = await api.get('/profile/');
         
         setProfile(response.data);
+        // fetch aptitude result silently
+        try { const ar = await api.get('/aptitude/result/me'); setAptitudeResult(ar.data); } catch(_e){ /* ignore 404 */ }
       } catch (error) {
         console.error('Error fetching profile:', error);
         if (error.response?.status === 401) {
@@ -371,6 +374,28 @@ const Dashboard = () => {
             </div>
           ))}
         </section>
+        {(!aptitudeResult) && (
+          <section className={`auth-card ${solid ? 'auth-card-solid' : ''} mt-10 dash-cta-card`}>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><span>🧠</span> Aptitude Test</h3>
+            <p className="text-sm opacity-80 mb-4">Start your aptitude assessment to unlock skill insights and personalized learning focus.</p>
+            <button onClick={() => navigate('/aptitude')} className="btn-glass-primary">Start Aptitude Test</button>
+          </section>
+        )}
+        {(aptitudeResult) && (
+          <section className={`auth-card ${solid ? 'auth-card-solid' : ''} mt-10`}> 
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><span>🧠</span> Aptitude Summary</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              {Object.entries(aptitudeResult.breakdown || {}).map(([k,v]) => (
+                <div key={k} className="p-3 rounded bg-white/5 border border-white/10 text-center">
+                  <div className="text-xs opacity-70 mb-1 uppercase tracking-wide">{k}</div>
+                  <div className="text-lg font-semibold">{v}</div>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm opacity-80 mb-4">Score: {aptitudeResult.totalScore} / {aptitudeResult.totalQuestions}</p>
+            <button onClick={() => navigate('/aptitude')} className="btn-glass-primary">View Details</button>
+          </section>
+        )}
         <footer className="text-center mt-16 opacity-70 text-xs tracking-wide">
           MyEduGuide – Personalized career guidance platform
         </footer>
